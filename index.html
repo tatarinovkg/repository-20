@@ -2,38 +2,297 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Account</title>
     <style>
+        /* Стили остаются без изменений */
+        * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            background-color: #f5f5f7;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            position: relative;
         }
-        .content {
-            max-width: 600px;
-            padding: 0 20px; /* Отступы по бокам */
+        .container {
+            width: 95%;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin: 15px auto;
+            animation: fadeIn 0.5s ease-out;
         }
-        h2 {
-            font-size: 24px;
-            margin-bottom: 10px;
+        .content { width: 95%; margin: 0 auto; }
+        h1 { font-size: 28px; font-weight: 600; color: #1d1d1f; margin-bottom: 12px; text-align: center; }
+        h2 { font-size: 22px; font-weight: 500; color: #1d1d1f; margin: 20px 0 12px; border-bottom: 1px solid #e5e5ea; padding-bottom: 4px; }
+        p { font-size: 16px; color: #3c3c43; margin: 6px 0; }
+        .small { font-size: 14px; color: #8e8e93; }
+        .item {
+            background: #f2f2f7;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
         }
-        p {
-            font-size: 18px;
-            line-height: 1.5;
+        .item-header { font-weight: 500; margin-bottom: 6px; color: #1d1d1f; }
+        .delete-btn {
+            display: block; width: 100%; margin: 8px auto 0; padding: 10px;
+            background: #ff3b30; border: none; color: #fff; border-radius: 8px;
+            cursor: pointer; font-size: 14px; transition: background 0.2s;
         }
+        .delete-btn:hover { background: #e02a21; }
+        a { color: #007aff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loader-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: transparent; display: flex; justify-content: center; align-items: center;
+            z-index: 2000;
+        }
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .popup-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .popup {
+            background: #fff; border-radius: 12px; padding: 20px; max-width: 90%;
+            text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .popup-buttons {
+            margin-top: 16px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .popup-button {
+            width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;
+        }
+        .popup-button.confirm { background-color: #34c759; color: #fff; }
+        .popup-button.cancel { background-color: #ff3b30; color: #fff; }
     </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-<div class="content">
-    <h2>Скоро вы сможете посмотреть свои действия в боте</h2>
-    <p>В настоящий момент на сайте проводятся технические работы.<br>
-        Пожалуйста, зайдите через некоторое время.<br>
-        Приносим извинения за неудобства.</p>
+<!-- Лоадер -->
+<div id="loader" class="loader-overlay">
+    <div class="loader"></div>
 </div>
+
+<div class="container">
+    <div class="content" id="app"></div>
+</div>
+
+<script>
+    // Функция для показа popup-сообщений (аналог alert)
+    function showPopup(message, duration = 3000) {
+        const overlay = document.createElement('div');
+        overlay.className = 'popup-overlay';
+        const popup = document.createElement('div');
+        popup.className = 'popup';
+        popup.innerHTML = `<p>${message}</p>
+                <p class="small">Поддержка: <a href="https://t.me/tatarinovkg" target="_blank">https://t.me/tatarinovkg</a></p>`;
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        setTimeout(() => { document.body.removeChild(overlay); }, duration);
+    }
+
+    // Функция для показа подтверждения (аналог confirm)
+    function showConfirm(message) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'popup-overlay';
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+            popup.innerHTML = `<p>${message}</p>`;
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'popup-buttons';
+            const btnYes = document.createElement('button');
+            btnYes.className = 'popup-button confirm';
+            btnYes.textContent = 'Да';
+            btnYes.addEventListener('click', () => {
+                resolve(true);
+                document.body.removeChild(overlay);
+            });
+            const btnNo = document.createElement('button');
+            btnNo.className = 'popup-button cancel';
+            btnNo.textContent = 'Нет';
+            btnNo.addEventListener('click', () => {
+                resolve(false);
+                document.body.removeChild(overlay);
+            });
+            buttonsDiv.appendChild(btnYes);
+            buttonsDiv.appendChild(btnNo);
+            popup.appendChild(buttonsDiv);
+            overlay.appendChild(popup);
+            document.body.appendChild(overlay);
+        });
+    }
+
+    // Функция удаления опубликованного отзыва
+    async function deleteReview(feedbackID, itemElement) {
+        const confirmed = await showConfirm("Вы действительно хотите удалить отзыв?");
+        if (confirmed) {
+            try {
+                const response = await fetch("https://cloudpub.tatarinovkg.ru/api/deleteReview", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ feedbackID })
+                });
+                if (!response.ok) throw new Error("Ошибка удаления");
+                const data = await response.json();
+                if (data.success) {
+                    itemElement.remove(); // Удаляем элемент из DOM
+                    showPopup("Отзыв успешно удалён", 2000);
+                } else {
+                    showPopup("Ошибка: " + (data.error || "неизвестная ошибка"));
+                }
+            } catch (error) {
+                showPopup("Ошибка удаления отзыва");
+            }
+        }
+    }
+    document.addEventListener("DOMContentLoaded", async () => {
+        const appDiv = document.getElementById("app");
+
+        // Получаем объект Telegram WebApp
+        const tg = window.Telegram.WebApp;
+
+        // Проверка на запуск из Telegram
+        if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+            appDiv.innerHTML = `
+      <div class="error-message" style="text-align: center;">
+        <h1>Ошибка</h1>
+        <p>Откройте приложение через Telegram.</p>
+      </div>
+    `;
+            document.getElementById("loader").style.display = "none";
+            return;
+        }
+
+        // Раскрываем окно
+        tg.expand();
+        // Настраиваем главную кнопку
+        tg.MainButton.setText("Закрыть приложение");
+        tg.MainButton.show();
+        tg.MainButton.onClick(() => tg.close());
+
+        // Автоматическое получение данных пользователя
+        const user = tg.initDataUnsafe.user;
+
+        try {
+            const response = await fetch("https://cloudpub.tatarinovkg.ru/api/getUserData", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id })
+            });
+            if (!response.ok) throw new Error("Ошибка загрузки данных");
+            const data = await response.json();
+
+            // Формирование HTML-контента (ваш существующий код)
+            let html = `
+                  <h1>Личный кабинет</h1>
+                  <p><strong>${user.first_name}</strong></p>
+                  <p class="small">UID: ${user.id}</p>
+                  <p>Добро пожаловать в личный кабинет! Здесь вы можете просматривать информацию о ваших услугах и отзывах.</p>
+                `;
+            // Опубликованные услуги
+            html += `<h2>Опубликованные услуги</h2>`;
+            if (data.publishedServices && data.publishedServices.length > 0) {
+                data.publishedServices.forEach(service => {
+                    html += `
+                            <div class="item">
+                                <div class="item-header">Краткое описание услуги: ${service.shortDescription}</div>
+                                ${service.service ? `<p><strong>Полное описание услуги:</strong> ${service.service}</p>` : ''}
+                                ${service.contactPerson ? `<p><strong>Контактное лицо:</strong> ${service.contactPerson}</p>` : ''}
+                                ${service.contacts ? `<p><strong>Контакты:</strong> ${service.contacts}</p>` : ''}
+                            </div>
+                        `;
+                });
+            } else {
+                html += `<p>Опубликованных услуг не найдено.</p>`;
+            }
+
+            // Неопубликованные услуги (с указанием группы)
+            html += `<h2>Неопубликованные услуги</h2>`;
+            if (data.unpublishedServices && data.unpublishedServices.length > 0) {
+                data.unpublishedServices.forEach(service => {
+                    html += `
+                            <div class="item">
+                                <div class="item-header">Краткое описание услуги: ${service.shortDescription}</div>
+                                ${service.service ? `<p><strong>Полное описание услуги:</strong> ${service.service}</p>` : ''}
+                                ${service.contactPerson ? `<p><strong>Контактное лицо:</strong> ${service.contactPerson}</p>` : ''}
+                                ${service.contacts ? `<p><strong>Контакты:</strong> ${service.contacts}</p>` : ''}
+                                ${service.group_name ? `<p><strong>Желаемая группа:</strong> ${service.group_name}</p>` : ''}
+                            </div>
+                        `;
+                });
+            } else {
+                html += `<p>Неопубликованных услуг не найдено.</p>`;
+            }
+
+            // Опубликованные отзывы
+            html += `<h2>Опубликованные отзывы</h2>`;
+            if (data.publishedReviews && data.publishedReviews.length > 0) {
+                data.publishedReviews.forEach(review => {
+                    html += `
+                            <div class="item">
+                                <div class="item-header">${review.feedbackText ? review.feedbackText : "Текст отзыва отсутствует"}</div>
+                                <p><strong>Оценка:</strong> ${review.feedbackRating || "—"}</p>
+                                <p><strong>Краткое описание оцениваемой услуги:</strong> ${review.shortDescription}</p>
+                                ${review.contactPerson ? `<p><strong>Контактное лицо (услуги):</strong> ${review.contactPerson}</p>` : ''}
+                                <button class="delete-btn" onclick="deleteReview(${review.feedbackID}, this.parentElement)">Удалить отзыв</button>
+                            </div>
+                        `;
+                });
+            } else {
+                html += `<p>Опубликованных отзывов не найдено.</p>`;
+            }
+
+            // Неопубликованные отзывы
+            html += `<h2>Неопубликованные отзывы</h2>`;
+            if (data.unpublishedReviews && data.unpublishedReviews.length > 0) {
+                data.unpublishedReviews.forEach(review => {
+                    html += `
+                            <div class="item">
+                                <div class="item-header">${review.feedbackText ? review.feedbackText : "Текст отзыва отсутствует"}</div>
+                                <p><strong>Оценка:</strong> ${review.feedbackRating || "—"}</p>
+                                <p><strong>Краткое описание оцениваемой услуги:</strong> ${review.shortDescription}</p>
+                                ${review.contactPerson ? `<p><strong>Контактное лицо (услуги):</strong> ${review.contactPerson}</p>` : ''}
+                            </div>
+                        `;
+                });
+            } else {
+                html += `<p>Неопубликованных отзывов не найдено.</p>`;
+            }
+
+            appDiv.innerHTML = html;
+        } catch (error) {
+            appDiv.innerHTML = `
+      <div class="error-message" style="text-align: center;">
+        <h1>Ошибка</h1>
+        <p>Не удалось загрузить данные. Попробуйте позже.</p>
+        <p class="small">Поддержка: <a href="https://t.me/tatarinovkg" target="_blank">https://t.me/tatarinovkg</a></p>
+      </div>
+    `;
+        } finally {
+            document.getElementById("loader").style.display = "none";
+        }
+    });
+</script>
 </body>
 </html>
