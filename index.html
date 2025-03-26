@@ -148,7 +148,7 @@
         const confirmed = await showConfirm("Вы действительно хотите удалить отзыв?");
         if (confirmed) {
             try {
-                const response = await fetch("https://cloudpub.tatarinovkg.ru/api/deleteReview", {
+                const response = await fetch("https://tatarinovkg.cloudpub.ru/api/deleteReview", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ feedbackID })
@@ -195,7 +195,7 @@
         const user = tg.initDataUnsafe.user;
 
         try {
-            const response = await fetch("https://cloudpub.tatarinovkg.ru/api/getUserData", {
+            const response = await fetch("https://tatarinovkg.cloudpub.ru/api/getUserData", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.id })
