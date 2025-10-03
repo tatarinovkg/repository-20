@@ -42,3 +42,4 @@ html,body{
 .stack-2 > * + * { margin-top: 8px; }
 .stack-3 > * + * { margin-top: 12px; }
 .stack-4 > * + * { margin-top: 16px; }
+.shadow-soft { box-shadow: none !important; }
