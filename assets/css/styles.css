@@ -1,0 +1,9 @@
+html,body{height:100%}
+*{-webkit-tap-highlight-color:transparent}
+:root{color-scheme:light dark}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .22s ease-out both}
+.modal-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:1000}
+.modal{background:rgba(255,255,255,.98);color:#0f172a;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:92%;width:420px;padding:18px}
+.dark .modal{background:rgba(2,6,23,.98);color:#e5e7eb}
+.no-scroll{overflow:hidden}
