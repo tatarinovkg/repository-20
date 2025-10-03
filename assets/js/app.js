@@ -40,11 +40,9 @@
   function render(app, user, data){
     const parts=[]
     parts.push(`<div class="mb-4"><div class="text-xl font-bold">${UI.escapeHTML(user.first_name||'Пользователь')}</div><div class="text-slate-500 text-sm">UID: ${UI.escapeHTML(String(user.id||''))}</div><p class="mt-2 text-sm">Добро пожаловать! Здесь вы можете просматривать информацию о ваших услугах и отзывах.</p></div>`)
-
-    // Опубликованные услуги
     parts.push(sectionTitle('Опубликованные услуги'))
     if(Array.isArray(data.publishedServices) && data.publishedServices.length){
-      parts.push('<div class="space-y-3">')
+      parts.push('<div class="stack-3">')
       data.publishedServices.forEach(s=>{
         parts.push(`<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-4 py-3 shadow-soft fade-in">
           <div class="font-medium mb-1">Краткое описание услуги: ${UI.escapeHTML(s.shortDescription||'')}</div>
@@ -57,11 +55,9 @@
     }else{
       parts.push(`<p class="text-sm text-slate-500">Опубликованных услуг не найдено.</p>`)
     }
-
-    // Неопубликованные услуги
     parts.push(sectionTitle('Неопубликованные услуги'))
     if(Array.isArray(data.unpublishedServices) && data.unpublishedServices.length){
-      parts.push('<div class="space-y-3">')
+      parts.push('<div class="stack-3">')
       data.unpublishedServices.forEach(s=>{
         parts.push(`<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-4 py-3 shadow-soft fade-in">
           <div class="font-medium mb-1">Краткое описание услуги: ${UI.escapeHTML(s.shortDescription||'')}</div>
@@ -73,13 +69,11 @@
       })
       parts.push('</div>')
     }else{
-      parts.push(`<p class="text-sm text-slate-500">Неопубликованных услуг не найдено.</p>`)
+      parts.push(`<p class="text-sm text-slate-500">Неопубликованных услуг не найдено.</п>`)
     }
-
-    // Опубликованные отзывы
     parts.push(sectionTitle('Опубликованные отзывы'))
     if(Array.isArray(data.publishedReviews) && data.publishedReviews.length){
-      parts.push('<div class="space-y-3">')
+      parts.push('<div class="stack-3">')
       data.publishedReviews.forEach(r=>{
         const id = r.feedbackID
         parts.push(`<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-4 py-3 shadow-soft fade-in" data-review-id="${UI.escapeHTML(String(id))}">
@@ -96,11 +90,9 @@
     }else{
       parts.push(`<p class="text-sm text-slate-500">Опубликованных отзывов не найдено.</p>`)
     }
-
-    // Неопубликованные отзывы
     parts.push(sectionTitle('Неопубликованные отзывы'))
     if(Array.isArray(data.unpublishedReviews) && data.unpublishedReviews.length){
-      parts.push('<div class="space-y-3">')
+      parts.push('<div class="stack-3">')
       data.unpublishedReviews.forEach(r=>{
         parts.push(`<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-4 py-3 shadow-soft fade-in">
           <div class="font-medium mb-1">${UI.escapeHTML(r.feedbackText || 'Текст отзыва отсутствует')}</div>
@@ -113,7 +105,6 @@
     }else{
       parts.push(`<p class="text-sm text-slate-500">Неопубликованных отзывов не найдено.</p>`)
     }
-
     app.innerHTML = parts.join('')
     app.addEventListener('click', async (e)=>{
       const t=e.target
